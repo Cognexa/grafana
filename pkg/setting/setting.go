@@ -161,6 +161,7 @@ type Cfg struct {
 	CookieSecure                      bool
 	CookieSameSiteDisabled            bool
 	CookieSameSiteMode                http.SameSite
+	CookieDomain					  string
 	AllowEmbedding                    bool
 	XSSProtectionHeader               bool
 	ContentTypeProtectionHeader       bool
@@ -1541,6 +1542,7 @@ func readSecuritySettings(iniFile *ini.File, cfg *Cfg) error {
 		}
 	}
 	cfg.AllowEmbedding = security.Key("allow_embedding").MustBool(false)
+	cfg.CookieDomain = valueAsString(security, "cookie_domain", "")
 
 	cfg.ContentTypeProtectionHeader = security.Key("x_content_type_options").MustBool(true)
 	cfg.XSSProtectionHeader = security.Key("x_xss_protection").MustBool(true)
