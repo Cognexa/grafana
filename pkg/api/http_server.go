@@ -592,8 +592,40 @@ func (hs *HTTPServer) applyRoutes() {
 	hs.web.NotFound(middleware.ProvideRouteOperationName("notfound"), middleware.ReqSignedIn, hs.NotFoundHandler)
 }
 
+func CORS() web.Handler {
+	return func(ctx *web.Context) {
+		reqOptions := ctx.Req.Method == http.MethodOptions
+
+		headers := map[string]string{
+			"access-control-allow-origin": os.Getenv("ALLOWED_ORIGINS"),
+			"access-control-allow-methods":  "GET, POST, OPTIONS",
+			"access-control-allow-credentials":  "true",
+			"access-control-allow-headers":  "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range",
+		}
+		if reqOptions {
+			headers["content-type"] = "text/plain; charset=utf-8"
+            headers["content-length"] = "0"
+		} else {
+			headers["access-control-expose-headers"] = "Content-Length,Content-Range"
+		}
+
+		ctx.Resp.Before(func(w web.ResponseWriter) {
+			for k, v := range headers {
+				w.Header().Set(k, v)
+			}
+		})
+		if reqOptions {
+			ctx.Resp.WriteHeader(200)
+			return
+		}
+	}
+}
+
+
 func (hs *HTTPServer) addMiddlewaresAndStaticRoutes() {
 	m := hs.web
+
+	m.Use(CORS())
 
 	m.Use(requestmeta.SetupRequestMetadata())
 	m.Use(middleware.RequestTracing(hs.tracer))
